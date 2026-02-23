@@ -114,7 +114,3 @@ Then reference them from `CLAUDE.md`:
 ### Supporting additional LLMs
 
 Add new top-level instruction files as needed. The `.claude/rules/` directory contains the shared standards — each LLM's instruction file should reference or inline the same rules for consistency.
-
-## License
-
-MIT
