@@ -6,10 +6,18 @@ Portable configuration files, agent instructions, and coding standards for LLM-p
 
 ```
 llm-agent-kit/
-├── AGENTS.md                          # OpenAI Codex instructions
+├── AGENTS.md                          # Symlink → .claude/CLAUDE.md (for OpenAI Codex)
 ├── .github/
-│   └── prompts/
-│       └── review.md                  # PR review prompt (GitHub Copilot / Claude)
+│   ├── actions/
+│   │   └── claude-stats/
+│   │       └── action.yml             # Reusable action: parse & post Claude usage stats
+│   ├── prompts/
+│   │   └── review.md                  # PR review prompt (GitHub Copilot / Claude)
+│   └── workflows/
+│       ├── claude.yml                 # Claude assistant (@claude mentions)
+│       ├── claude-review.yml          # Claude automated PR review (disabled by default)
+│       ├── openai-assistant.yml       # Codex assistant (@codex mentions)
+│       └── openai-review.yml         # Codex automated PR review
 └── .claude/
     ├── CLAUDE.md                      # Claude Code instructions
     ├── tailwind-plus-components.md    # 639-component Tailwind Plus inventory
@@ -22,14 +30,19 @@ llm-agent-kit/
 
 | File | Purpose | Used By |
 |------|---------|---------|
-| `AGENTS.md` | Self-contained project context and coding standards | OpenAI Codex |
-| `.claude/CLAUDE.md` | Project context with references to rule files | Claude Code |
+| `AGENTS.md` | Symlink to `.claude/CLAUDE.md` — single source of truth for all agents | OpenAI Codex |
+| `.claude/CLAUDE.md` | Project context with references to rule files | Claude Code, Codex (via symlink) |
 | `.claude/rules/code-style.md` | Method size limits, naming conventions, TypeScript rules | Claude Code |
 | `.claude/rules/testing.md` | Arrange/Act/Assert structure, what to test, quality gates | Claude Code |
 | `.claude/rules/security.md` | No-touch zones, input validation, secret handling | Claude Code |
 | `.claude/rules/file-organization.md` | Directory size caps, domain grouping, dependency direction | Claude Code |
 | `.claude/tailwind-plus-components.md` | Full Tailwind Plus component inventory for Figma-to-code workflows | Both |
 | `.github/prompts/review.md` | Structured PR review prompt with categories and output format | GitHub Copilot / Claude |
+| `.github/actions/claude-stats/action.yml` | Reusable composite action to parse Claude execution stats and post as comment | GitHub Actions |
+| `.github/workflows/claude.yml` | Claude assistant — responds to `@claude` mentions on issues/PRs | GitHub Actions |
+| `.github/workflows/claude-review.yml` | Claude automated PR review (disabled by default, enable via `if` condition) | GitHub Actions |
+| `.github/workflows/openai-assistant.yml` | Codex assistant — responds to `@codex` mentions on issues/PRs | GitHub Actions |
+| `.github/workflows/openai-review.yml` | Codex automated PR review on non-draft PRs | GitHub Actions |
 
 ## Usage
 
@@ -50,6 +63,10 @@ cp llm-agent-kit/AGENTS.md /path/to/your-project/AGENTS.md
 # Copy PR review prompt
 mkdir -p /path/to/your-project/.github/prompts
 cp llm-agent-kit/.github/prompts/review.md /path/to/your-project/.github/prompts/review.md
+
+# Copy GitHub Actions workflows (Claude + OpenAI Codex)
+cp -r llm-agent-kit/.github/workflows/ /path/to/your-project/.github/workflows/
+cp -r llm-agent-kit/.github/actions/ /path/to/your-project/.github/actions/
 ```
 
 ### Option 2: Use as a starting point
@@ -63,6 +80,9 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 5. **No-touch zones** — your critical files that need approval before editing
 6. **Quality gates** — your per-package test and lint commands
 7. **Package-specific review rules** — uncomment and fill in the review.md package rules section
+8. **GitHub Actions secrets** — add `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` to your repo secrets
+9. **Workflow models** — update the `--model` and `model:` values in the workflow files to your preferred models
+10. **Enable Claude PR review** — uncomment the `if` condition in `claude-review.yml` (disabled by default)
 
 ## What's Included
 
@@ -101,6 +121,13 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 ### Figma-to-Code Workflow
 - Component resolution order: existing components > Tailwind Plus > custom
 - Full inventory of 639 Tailwind Plus components (Application UI, Marketing, Ecommerce)
+
+### GitHub Actions Workflows
+- **Claude assistant** (`claude.yml`) — responds to `@claude` mentions on issues and PRs, supports assignment and label triggers
+- **Claude PR review** (`claude-review.yml`) — automated PR review using Claude (disabled by default, enable via job `if` condition)
+- **Codex assistant** (`openai-assistant.yml`) — responds to `@codex` mentions with read-only sandbox, split security model (read job + write job)
+- **Codex PR review** (`openai-review.yml`) — automated PR review using Codex with diff context and review prompt
+- **Claude stats action** (`claude-stats/action.yml`) — reusable composite action that parses Claude execution files and posts cost/token/duration stats as PR comments
 
 ### AI-Specific Instructions
 - Read before editing, follow existing patterns
@@ -150,8 +177,8 @@ I need you to sync the llm-agent-kit repo with changes from my source project's 
 **llm-agent-kit location:** [path to llm-agent-kit clone]
 
 Steps:
-1. Read all files in the source project's `.claude/` directory and `.github/prompts/` directory.
-2. Read all files in the llm-agent-kit repo (`.claude/`, `.github/prompts/`, `AGENTS.md`, `README.md`).
+1. Read all files in the source project's `.claude/` directory, `.github/prompts/` directory, `.github/workflows/` directory, and `.github/actions/` directory.
+2. Read all files in the llm-agent-kit repo (`.claude/`, `.github/`, `AGENTS.md`, `README.md`).
 3. For each file, compare the source project version with the llm-agent-kit version and identify:
    - New content that should be synced (new rules, bullets, sections)
    - Project-specific content that should be genericized or omitted
@@ -161,7 +188,8 @@ Steps:
    - Remove domain-specific terms (your product's unique concepts)
    - Keep all engineering principles, hard limits, and structural rules intact
    - Keep the same tone and format
-5. Update `AGENTS.md` to mirror any changes made to the `.claude/` files (it's a self-contained version of the same rules).
-6. Update `README.md` if new files were added or the structure changed.
-7. Commit with message: "Sync rules from source project" and push to main.
+5. `AGENTS.md` is a symlink to `.claude/CLAUDE.md` — no separate sync needed.
+6. Compare `.github/workflows/` and `.github/actions/` — sync any workflow changes, genericizing project-specific references.
+7. Update `README.md` if new files were added or the structure changed.
+8. Commit with message: "Sync rules from source project" and push to main.
 ```
