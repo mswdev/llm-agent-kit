@@ -191,10 +191,42 @@ Before approving any PR, verify:
 - [ ] **Would a new teammate understand this in 5 minutes?**
 - [ ] **Do new API endpoints have input validation schemas?**
 - [ ] **Do all exported functions/methods/classes have JSDoc documentation?**
+- [ ] **Do route handlers and service methods log their outcomes?**
+- [ ] **Do all catch blocks capture errors to the error monitoring service?**
 
 ---
 
-## 7. Infrastructure & Services
+## 7. File Organization
+
+### Directory Size Limits
+
+These are **hard limits**, not guidelines:
+- **MAXIMUM 10 source files per directory.** Count only source files (`.ts`, `.tsx`) — colocated `.test.` and `.stories.` files do NOT count toward the cap. If a directory has 10 source files, the next file MUST go in a subdirectory. No exceptions.
+- **Colocate test and story files with their source files.** `Button.tsx`, `Button.test.tsx`, and `Button.stories.tsx` belong together in the same directory.
+
+When a directory approaches the cap, group related files into subdirectories by **domain**, **feature**, or **concern** — not by file type.
+
+### Directory Grouping
+
+Group by **domain or feature**, not by file type. Keep related code together.
+
+**Exception:** Top-level `src/` directories MAY be organized by architectural layer (e.g., `api/`, `db/`, `event/`) when they represent distinct system boundaries. Within those layers, group by domain.
+
+### Dependency Direction
+
+Imports flow **downward and inward**, never upward or sideways across features.
+
+- **Parent directories MUST NOT import from child route/feature directories.** Shared code lives at the nearest common ancestor.
+- **Sibling feature directories MUST NOT import from each other.** Extract shared code to their common parent or a `_shared/` directory.
+
+### DO NOT MIMIC EXISTING BAD PATTERNS
+
+- **NEVER add files to a directory that already exceeds the 10-file cap.** Flag it and propose a restructuring.
+- **When creating new files, follow these rules from scratch** — do not pattern-match against poorly organized directories.
+
+---
+
+## 8. Infrastructure & Services
 
 <!-- Replace with your project's infrastructure -->
 <!-- Example:
@@ -208,7 +240,7 @@ Before approving any PR, verify:
 
 ---
 
-## 8. Git Workflow
+## 9. Git Workflow
 
 **Branch naming:** `feature/{ticket}-{short-description}` (e.g., `feature/123-user-auth`)
 **Commit messages:** Reference ticket (e.g., `#123: Implement user auth flow`)
@@ -217,10 +249,11 @@ Before approving any PR, verify:
 
 ---
 
-## 9. AI-Specific Instructions
+## 10. AI-Specific Instructions
 
 - **Read and ingest before you edit.** Always read relevant source files before proposing changes. NEVER speculate about code you haven't inspected.
-- **Follow existing design patterns.** Study the relevant package and match the established architecture, file placement, and naming. If a convention exists, use it. If you have a clear technical reason to deviate, explain the rationale.
+- **These rules are authoritative over observed codebase patterns.** If existing code violates a rule in this document, that is technical debt — not a convention to follow. Never justify bad practices because you see them elsewhere in the repo. When in doubt, follow the rules, not the code.
+- **Follow existing design patterns that comply with these rules.** Study the relevant package and match the established architecture, file placement, and naming. If a convention exists and does not violate these rules, use it. If you have a clear technical reason to deviate, explain the rationale.
 - **Reuse existing utility functions**
 - **Reuse existing UI components**
 - **Verify schema and queries against source files.** Check your ORM schema for table/column structure before writing code that references them.

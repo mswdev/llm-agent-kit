@@ -7,13 +7,17 @@ Portable configuration files, agent instructions, and coding standards for LLM-p
 ```
 llm-agent-kit/
 ├── AGENTS.md                          # OpenAI Codex instructions
+├── .github/
+│   └── prompts/
+│       └── review.md                  # PR review prompt (GitHub Copilot / Claude)
 └── .claude/
     ├── CLAUDE.md                      # Claude Code instructions
     ├── tailwind-plus-components.md    # 639-component Tailwind Plus inventory
     └── rules/
         ├── code-style.md              # Naming, complexity limits, documentation
         ├── testing.md                 # Test philosophy, structure, quality gates
-        └── security.md               # No-touch zones, security rules
+        ├── security.md               # No-touch zones, security rules
+        └── file-organization.md      # Directory caps, grouping, dependency direction
 ```
 
 | File | Purpose | Used By |
@@ -23,7 +27,9 @@ llm-agent-kit/
 | `.claude/rules/code-style.md` | Method size limits, naming conventions, TypeScript rules | Claude Code |
 | `.claude/rules/testing.md` | Arrange/Act/Assert structure, what to test, quality gates | Claude Code |
 | `.claude/rules/security.md` | No-touch zones, input validation, secret handling | Claude Code |
+| `.claude/rules/file-organization.md` | Directory size caps, domain grouping, dependency direction | Claude Code |
 | `.claude/tailwind-plus-components.md` | Full Tailwind Plus component inventory for Figma-to-code workflows | Both |
+| `.github/prompts/review.md` | Structured PR review prompt with categories and output format | GitHub Copilot / Claude |
 
 ## Usage
 
@@ -40,6 +46,10 @@ cp -r llm-agent-kit/.claude/ /path/to/your-project/.claude/
 
 # Copy Codex instructions
 cp llm-agent-kit/AGENTS.md /path/to/your-project/AGENTS.md
+
+# Copy PR review prompt
+mkdir -p /path/to/your-project/.github/prompts
+cp llm-agent-kit/.github/prompts/review.md /path/to/your-project/.github/prompts/review.md
 ```
 
 ### Option 2: Use as a starting point
@@ -52,6 +62,7 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 4. **Linting config** — your linter (Biome, ESLint, etc.)
 5. **No-touch zones** — your critical files that need approval before editing
 6. **Quality gates** — your per-package test and lint commands
+7. **Package-specific review rules** — uncomment and fill in the review.md package rules section
 
 ## What's Included
 
@@ -65,6 +76,12 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - 3 parameters per method maximum
 - No `any` types, no magic numbers, early returns over nesting
 
+### File Organization (Hard Limits)
+- 10 source files per directory maximum (tests/stories excluded from count)
+- Colocate tests and stories with source files
+- Group subdirectories by domain/feature, not file type
+- Imports flow downward only — no parent-from-child or sibling cross-imports
+
 ### Testing Standards
 - Arrange/Act/Assert structure
 - Hand-written fakes over mocking libraries
@@ -76,12 +93,18 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - Monetary values in cents (integers, never floats)
 - No-touch zone patterns for critical files
 
+### PR Review Prompt
+- Structured review across 6 categories: Code Quality, Security, Testing, Potential Bugs, PR Hygiene, File Organization
+- Standardized output format: Verdict, Summary, Strengths, Category Review, Issues (by severity), Suggestions, Verification
+- Grounded in the project's rule files — not invented standards
+
 ### Figma-to-Code Workflow
 - Component resolution order: existing components > Tailwind Plus > custom
 - Full inventory of 639 Tailwind Plus components (Application UI, Marketing, Ecommerce)
 
 ### AI-Specific Instructions
 - Read before editing, follow existing patterns
+- Rules are authoritative over observed codebase patterns
 - Reuse existing utilities and components
 - Verify schemas before writing queries
 - Flag security concerns proactively
@@ -97,6 +120,7 @@ Create rule files under `.claude/rules/` for individual packages:
 ├── code-style.md
 ├── testing.md
 ├── security.md
+├── file-organization.md
 ├── backend/
 │   └── api.md          # API-specific rules
 └── frontend/
@@ -114,3 +138,30 @@ Then reference them from `CLAUDE.md`:
 ### Supporting additional LLMs
 
 Add new top-level instruction files as needed. The `.claude/rules/` directory contains the shared standards — each LLM's instruction file should reference or inline the same rules for consistency.
+
+## Syncing from Source Project
+
+If you maintain a source project (e.g., your main app) and want to periodically sync its `.claude/` improvements back to this kit, copy and paste this prompt to Claude:
+
+```
+I need you to sync the llm-agent-kit repo with changes from my source project's .claude directory.
+
+**Source project:** [path to your project]
+**llm-agent-kit location:** [path to llm-agent-kit clone]
+
+Steps:
+1. Read all files in the source project's `.claude/` directory and `.github/prompts/` directory.
+2. Read all files in the llm-agent-kit repo (`.claude/`, `.github/prompts/`, `AGENTS.md`, `README.md`).
+3. For each file, compare the source project version with the llm-agent-kit version and identify:
+   - New content that should be synced (new rules, bullets, sections)
+   - Project-specific content that should be genericized or omitted
+4. Update the llm-agent-kit files:
+   - Replace project-specific names with generic placeholders (`[Project Name]`, etc.)
+   - Replace specific package names with generic equivalents (backend, frontend, etc.)
+   - Remove domain-specific terms (your product's unique concepts)
+   - Keep all engineering principles, hard limits, and structural rules intact
+   - Keep the same tone and format
+5. Update `AGENTS.md` to mirror any changes made to the `.claude/` files (it's a self-contained version of the same rules).
+6. Update `README.md` if new files were added or the structure changed.
+7. Commit with message: "Sync rules from source project" and push to main.
+```

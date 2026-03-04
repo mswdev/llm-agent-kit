@@ -11,7 +11,8 @@ See @README.md for project overview and @package.json for available commands.
 **Core Rules:**
 - @.claude/rules/code-style.md — Naming, complexity limits, documentation
 - @.claude/rules/testing.md — Test structure, what to test, quality gates
-- @.claude/rules/security.md — No-touch zones, security requirements
+- @.claude/rules/security.md — Security requirements
+- @.claude/rules/file-organization.md — Directory structure, file caps, dependency direction
 
 **Package Rules:** *(add package-specific rule files as needed)*
 <!-- Example:
@@ -57,6 +58,8 @@ Before approving any PR, verify:
 - [ ] **Would a new teammate understand this in 5 minutes?**
 - [ ] **Do new API endpoints have input validation schemas?**
 - [ ] **Do all exported functions/methods/classes have JSDoc documentation?**
+- [ ] **Do route handlers and service methods log their outcomes?**
+- [ ] **Do all catch blocks capture errors to the error monitoring service?**
 
 ## 4. Infrastructure & Services
 
@@ -100,7 +103,8 @@ NEVER create a new component from scratch if one already exists in the codebase 
 ## 7. AI-Specific Instructions
 
 - **Read and ingest before you edit.** Always read relevant source files before proposing changes. NEVER speculate about code you haven't inspected.
-- **Follow existing design patterns.** Study the relevant package and match the established architecture, file placement, and naming. If a convention exists, use it. If you have a clear technical reason to deviate, explain the rationale.
+- **These rules are authoritative over observed codebase patterns.** If existing code violates a rule in this document or `.claude/rules/`, that is technical debt — not a convention to follow. Never justify bad practices because you see them elsewhere in the repo. When in doubt, follow the rules, not the code.
+- **Follow existing design patterns that comply with these rules.** Study the relevant package and match the established architecture, file placement, and naming. If a convention exists and does not violate these rules, use it. If you have a clear technical reason to deviate, explain the rationale.
 - **Reuse existing utility functions**
 - **Reuse existing UI components**
 - **Verify schema and queries against source files.** Check your ORM schema for table/column structure before writing code that references them.
