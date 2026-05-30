@@ -4,15 +4,17 @@ paths:
   - "**/*.jsx"
 ---
 
-# Accessibility (WCAG 2.1 AA)
+# Accessibility (WCAG 2.1 AA floor / 2.2 AA for new UI)
 
 <!-- This file loads only when editing .tsx/.jsx files — no context cost on backend work. -->
 <!-- Covers patterns Claude consistently gets wrong. Basics (alt text, semantic HTML, -->
 <!-- form labels) are not listed because Claude already handles them correctly. -->
 
-All UI components MUST meet WCAG 2.1 Level AA. Automated tools (axe-core, Storybook a11y
-addon) catch structural violations in CI. The patterns below are the ones tools cannot
-catch — YOU MUST apply them manually.
+All UI components MUST meet WCAG 2.1 Level AA — the binding legal floor (EN 301 549 / ADA).
+Build NEW UI to WCAG 2.2 AA, a backward-compatible superset; the only in-scope additions
+are target size, focus-not-obscured, and redundant entry (see WCAG 2.2 Additions below).
+Automated tools (axe-core, Storybook a11y addon) catch structural violations in CI; the
+patterns below are the ones tools cannot catch — YOU MUST apply them manually.
 
 ## Live Regions & Notifications
 
@@ -35,23 +37,17 @@ elements are silently missed.
 
 ## Modals & Dialogs
 
-YOU MUST implement ALL of the following. Missing any one item breaks the modal for
-assistive technology users:
+**Prefer a vetted dialog primitive** (Headless UI, Radix, React Aria, or the native
+`<dialog>` element) — they handle the full contract below. Do NOT hand-roll a modal
+unless unavoidable. A dialog MUST satisfy all of:
 
 1. Container: `role="dialog"` + `aria-modal="true"` + `aria-labelledby="[title-id]"`
-2. On open: move focus to the first interactive element inside the dialog
-3. On open: apply `aria-hidden="true"` to all background content (`aria-modal` alone is not sufficient for NVDA/JAWS)
-4. Tab key: trapped inside the dialog — cycles only within it
-5. Esc key: closes the dialog
-6. On close: focus returns to the element that triggered the dialog
-
-```tsx
-<div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-  <h2 id="dialog-title">Confirm Action</h2>
-  <button autoFocus>Confirm</button>
-  <button onClick={onClose}>Cancel</button>
-</div>
-```
+2. On open: move focus to the first interactive element (or the dialog itself)
+3. On open: make background content `inert` via the **`inert` attribute** — NOT
+   `aria-hidden`, which throws a React 19 / Chromium "Blocked aria-hidden on a focused
+   descendant" error and is itself a defect
+4. Tab is trapped inside; Esc closes
+5. On close: focus returns to the element that triggered the dialog
 
 ## Form Validation Errors
 
@@ -143,6 +139,17 @@ not possible:
 - Add the matching `role` (`button`, `checkbox`, `menuitem`, `tab`, etc.)
 - Add `tabIndex={0}` so it is keyboard-reachable
 - Handle `onKeyDown` for Enter and Space
+
+## WCAG 2.2 Additions (new UI)
+
+- **Focus Not Obscured (2.4.11):** sticky headers, toolbars, and toasts MUST NOT fully
+  cover the element that has keyboard focus. Add `scroll-padding-top` to scroll containers.
+- **Target Size (2.5.8):** interactive targets are at least **24×24 CSS px** (NOT 44 —
+  that is the stricter AAA value). Dense controls may use the 24px center-to-center
+  spacing exception instead of growing the hit area.
+- **Route-change focus (2.4.3, SPA routers):** client-side navigation usually does NOT
+  move focus. On route change, move focus to the page `<h1>`/`<main>`. If the router has a
+  built-in assertive announcer (e.g. Next.js App Router), keep custom live regions polite.
 
 ## Keyboard Verification Checklist
 

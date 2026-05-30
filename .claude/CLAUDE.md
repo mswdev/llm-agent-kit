@@ -16,7 +16,7 @@ See @README.md for project overview and @package.json for available commands.
 
 **Accessibility:** *(for projects with a frontend — loads automatically on .tsx/.jsx edits)*
 <!-- Uncomment when the project has a React/Preact frontend: -->
-<!-- - @.claude/rules/accessibility.md — WCAG 2.1 AA patterns for modals, forms, tables, live regions -->
+<!-- - @.claude/rules/accessibility.md — WCAG 2.1 AA floor / 2.2 AA for new UI (modals, forms, tables, live regions) -->
 
 **Package Rules:** *(add package-specific rule files as needed)*
 <!-- Example:
