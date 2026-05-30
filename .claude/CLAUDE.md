@@ -14,6 +14,10 @@ See @README.md for project overview and @package.json for available commands.
 - @.claude/rules/security.md — Security requirements
 - @.claude/rules/file-organization.md — Directory structure, file caps, dependency direction
 
+**Accessibility:** *(for projects with a frontend — loads automatically on .tsx/.jsx edits)*
+<!-- Uncomment when the project has a React/Preact frontend: -->
+<!-- - @.claude/rules/accessibility.md — WCAG 2.1 AA patterns for modals, forms, tables, live regions -->
+
 **Package Rules:** *(add package-specific rule files as needed)*
 <!-- Example:
 - @.claude/rules/backend/api.md — API layer rules
