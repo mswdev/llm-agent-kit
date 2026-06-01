@@ -16,9 +16,12 @@ set -euo pipefail
 # ─── Configuration ────────────────────────────────────────────────────────────
 PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 
-# Path substrings and extensions that mark a file as frontend. A file qualifies
-# when its extension is in FRONTEND_EXTS AND its path contains a FRONTEND_DIRS entry.
-FRONTEND_DIRS=("/src/")
+# A file qualifies as frontend when its extension is in FRONTEND_EXTS. Optionally
+# restrict to directories by listing path substrings in FRONTEND_DIRS.
+# Default is EMPTY (match any directory) so it aligns with accessibility.md's
+# `paths: **/*.tsx|jsx` frontmatter and covers App-Router layouts (/app, root
+# /components, etc.), not just /src. Set e.g. FRONTEND_DIRS=("/src/") to narrow.
+FRONTEND_DIRS=()
 FRONTEND_EXTS=(".tsx" ".jsx")
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -40,9 +43,14 @@ is_frontend_file() {
   for ext in "${FRONTEND_EXTS[@]}"; do
     [[ "$file" == *"$ext" ]] && ext_ok=0 && break
   done
-  for dir in "${FRONTEND_DIRS[@]}"; do
-    [[ "$file" == *"$dir"* ]] && dir_ok=0 && break
-  done
+  # Empty FRONTEND_DIRS = no directory restriction (match any .tsx/.jsx).
+  if [[ "${#FRONTEND_DIRS[@]}" -eq 0 ]]; then
+    dir_ok=0
+  else
+    for dir in "${FRONTEND_DIRS[@]}"; do
+      [[ "$file" == *"$dir"* ]] && dir_ok=0 && break
+    done
+  fi
   [[ "$ext_ok" -eq 0 && "$dir_ok" -eq 0 ]]
 }
 
