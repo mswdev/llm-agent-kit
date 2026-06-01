@@ -147,9 +147,15 @@ not possible:
 - **Target Size (2.5.8):** interactive targets are at least **24×24 CSS px** (NOT 44 —
   that is the stricter AAA value). Dense controls may use the 24px center-to-center
   spacing exception instead of growing the hit area.
-- **Route-change focus (2.4.3, SPA routers):** client-side navigation usually does NOT
-  move focus. On route change, move focus to the page `<h1>`/`<main>`. If the router has a
-  built-in assertive announcer (e.g. Next.js App Router), keep custom live regions polite.
+- **Redundant Entry (3.3.7):** multi-step flows MUST NOT make users re-enter information
+  they already supplied earlier in the same process — auto-populate it or offer it.
+
+## SPA Focus Management
+
+- **Route-change focus (2.4.3):** client-side navigation usually does NOT move focus (it
+  is not a WCAG 2.2 addition, but it's commonly missed). On route change, move focus to
+  the page `<h1>`/`<main>`. If the router has a built-in assertive announcer (e.g. Next.js
+  App Router), keep custom live regions polite.
 
 ## Keyboard Verification Checklist
 

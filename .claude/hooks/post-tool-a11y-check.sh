@@ -62,6 +62,20 @@ fi
 LINT_CMD="${A11Y_LINT_CMD:-npx biome check --reporter=json}"
 LINT_OUTPUT=$(cd "$PROJECT_ROOT" && $LINT_CMD "$FILE_PATH" 2>/dev/null || true)
 
+# Distinguish "linter ran" from "linter failed". A genuine tooling failure (missing
+# binary, bad config) yields no parseable JSON — surface that instead of silently
+# reporting a false "no violations".
+if ! echo "$LINT_OUTPUT" | jq -e 'has("diagnostics")' >/dev/null 2>&1; then
+  jq -n --arg file "$(basename "$FILE_PATH")" \
+    '{
+      hookSpecificOutput: {
+        hookEventName: "PostToolUse",
+        additionalContext: "A11Y LINT could not run on \($file) — the linter returned no parseable output. Verify accessibility manually before continuing."
+      }
+    }'
+  exit 0
+fi
+
 # Count a11y violations directly from jq (avoids the grep -c "0\n0" arithmetic trap).
 VIOLATION_COUNT=$(
   echo "$LINT_OUTPUT" \
