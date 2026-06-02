@@ -1,0 +1,30 @@
+{
+  "$comment": "Wires the accessibility enforcement hooks so they are active on clone. PostToolUse injects a11y lint violations after each frontend edit; Stop blocks the agent from finishing a turn with unresolved a11y violations. Both honor A11Y_LINT_CMD / FRONTEND_DIRS / FRONTEND_EXTS configured in the scripts. Merge this `hooks` block into an existing settings.json rather than overwriting it.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-tool-a11y-check.sh",
+            "timeout": 20,
+            "statusMessage": "Checking accessibility..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/stop-a11y-check.sh",
+            "timeout": 30,
+            "statusMessage": "Verifying no accessibility violations remain..."
+          }
+        ]
+      }
+    ]
+  }
+}

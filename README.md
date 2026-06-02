@@ -113,6 +113,25 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - Monetary values in cents (integers, never floats)
 - No-touch zone patterns for critical files
 
+### Accessibility Enforcement (WCAG 2.1 AA floor / 2.2 for new UI)
+A layered system so accessibility is enforced, not just documented:
+- **Rules** — `.claude/rules/accessibility.md`, path-scoped to `*.tsx/*.jsx`, covering
+  the patterns tools can't catch (live regions, modal focus/`inert`, form-error
+  association, route-change focus, target size).
+- **PostToolUse hook** (`hooks/post-tool-a11y-check.sh`) — after each frontend edit,
+  runs the project linter's a11y rules and injects any violations back into context
+  for same-turn fixing. Configurable via `A11Y_LINT_CMD` / `FRONTEND_DIRS` / `FRONTEND_EXTS`.
+- **Stop hook** (`hooks/stop-a11y-check.sh`) — blocks the agent from finishing a turn
+  while changed frontend files still have a11y violations (loop-safe).
+- **`.claude/settings.json`** wires both hooks so they are active on clone. The
+  PostToolUse hook ships with a self-test (`hooks/post-tool-a11y-check.test.sh`).
+
+The *deterministic team-wide* gates are project-specific (they need your stack), so
+wire them per project — see the source project for working patterns:
+- a lefthook pre-commit job running the linter's a11y rules (hard-blocks at commit),
+- a CI component gate (e.g. Storybook + `@storybook/addon-a11y` with `a11y.test: "error"`),
+- a story-existence check so no component dodges the component a11y gate.
+
 ### PR Review Prompt
 - Structured review across 6 categories: Code Quality, Security, Testing, Potential Bugs, PR Hygiene, File Organization
 - Standardized output format: Verdict, Summary, Strengths, Category Review, Issues (by severity), Suggestions, Verification
