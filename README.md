@@ -130,7 +130,11 @@ The *deterministic team-wide* gates are project-specific (they need your stack),
 wire them per project — see the source project for working patterns:
 - a lefthook pre-commit job running the linter's a11y rules (hard-blocks at commit),
 - a CI component gate (e.g. Storybook + `@storybook/addon-a11y` with `a11y.test: "error"`),
-- a story-existence check so no component dodges the component a11y gate.
+- a story-existence check so no component dodges the component a11y gate,
+- a page-level gate (e.g. `@axe-core/playwright` on rendered pages) for the
+  composition rules a component gate can't see — one `<main>`, heading order,
+  `html[lang]`, skip link, composed contrast — with a per-route baseline so it
+  enforces no-regression without forcing existing fixes.
 
 ### PR Review Prompt
 - Structured review across 6 categories: Code Quality, Security, Testing, Potential Bugs, PR Hygiene, File Organization
