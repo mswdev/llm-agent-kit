@@ -49,6 +49,9 @@ unless unavoidable. A dialog MUST satisfy all of:
 4. Tab is trapped inside; Esc closes
 5. On close: focus returns to the element that triggered the dialog
 
+For destructive confirmations (e.g., delete or void actions), set initial focus to the
+**non-destructive** action.
+
 ## Form Validation Errors
 
 Errors MUST be programmatically associated with their field. A red border or icon alone
@@ -77,6 +80,9 @@ When a badge, dot, or icon uses color to convey state:
 - **Color-only** (a dot, colored border, or icon without a text label) → YOU MUST provide:
   - `aria-label="Approved"` on the element, OR
   - `<span className="sr-only">Approved</span>` as a visually-hidden sibling
+- **Badge contrast:** badge background colors must meet a 4.5:1 contrast ratio against
+  their text. Pastel backgrounds are the most common failure point — verify every new
+  color combination.
 
 ## Data Tables
 
@@ -143,7 +149,8 @@ not possible:
 ## WCAG 2.2 Additions (new UI)
 
 - **Focus Not Obscured (2.4.11):** sticky headers, toolbars, and toasts MUST NOT fully
-  cover the element that has keyboard focus. Add `scroll-padding-top` to scroll containers.
+  cover the element that has keyboard focus. Add `scroll-padding-top` to scroll containers
+  so focused elements land below the sticky header.
 - **Target Size (2.5.8):** interactive targets are at least **24×24 CSS px** (NOT 44 —
   that is the stricter AAA value). Dense controls may use the 24px center-to-center
   spacing exception instead of growing the hit area.

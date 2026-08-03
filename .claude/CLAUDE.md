@@ -8,21 +8,21 @@ See @README.md for project overview and @package.json for available commands.
 
 ## Quick Reference
 
-**Core Rules:**
+**Core Rules** (always loaded):
 - @.claude/rules/code-style.md — Naming, complexity limits, documentation
 - @.claude/rules/testing.md — Test structure, what to test, quality gates
 - @.claude/rules/security.md — Security requirements
+- @.claude/rules/data-protection.md — GDPR/CCPA compliance, PII encryption *(remove if the project holds no personal data)*
 - @.claude/rules/file-organization.md — Directory structure, file caps, dependency direction
 
-**Accessibility:** *(for projects with a frontend — loads automatically on .tsx/.jsx edits)*
-<!-- Uncomment when the project has a React/Preact frontend: -->
-<!-- - @.claude/rules/accessibility.md — WCAG 2.1 AA floor / 2.2 AA for new UI (modals, forms, tables, live regions) -->
+**Path-scoped rules** (no `@`-import — these auto-load via their `paths` frontmatter only when editing matching files, so they cost nothing on backend work):
+- `.claude/rules/accessibility.md` — WCAG 2.1 AA floor / 2.2 AA for new UI; loads on `.tsx`/`.jsx` edits
+- `.claude/rules/frontend/loading-states.md` — skeleton system: content-shaped, no layout shift; loads on `.tsx`/`.jsx` edits
 
-**Package Rules:** *(add package-specific rule files as needed)*
-<!-- Example:
-- @.claude/rules/backend/api.md — API layer rules
-- @.claude/rules/frontend/webapp.md — Frontend rules
--->
+**Package Rules** (path-scoped — load automatically when editing package files; adjust each file's `paths` frontmatter to your package directories, and delete files that don't apply):
+- `.claude/rules/backend/api.md` — API layer: validation, atomicity, concurrency, authorization
+- `.claude/rules/frontend/webapp.md` — Web app: components, Storybook, promotion path, resolution order
+- `.claude/rules/shopify-app/shopify-app.md` — Shopify app: Preact extensions, Polaris `s-*` accessibility
 
 ## How to Use These Instructions
 
@@ -54,8 +54,8 @@ See @README.md for project overview and @package.json for available commands.
 Before approving any PR, verify:
 - [ ] **Can I understand every method without reading its callees?** If no, the names need work.
 - [ ] **There are NO MAGIC NUMBERS**
-- [ ] **Is every method <= 25 lines?** NO EXCEPTIONS.
-- [ ] **Is nesting <= 2 levels deep?** Extract if not.
+- [ ] **Is every logic method ≤ 25 lines? React components/hooks ≤ 50 lines?** NO EXCEPTIONS.
+- [ ] **Is nesting ≤ 2 levels deep?** Extract if not.
 - [ ] **Does each class have a single, obvious responsibility?**
 - [ ] **Are there tests for every decision point in the logic?**
 - [ ] **Is there any cleverness that should be replaced with clarity?**
@@ -64,6 +64,7 @@ Before approving any PR, verify:
 - [ ] **Do all exported functions/methods/classes have JSDoc documentation?**
 - [ ] **Do route handlers and service methods log their outcomes?**
 - [ ] **Do all catch blocks capture errors to the error monitoring service?**
+- [ ] **Does async/data-loading UI ship a co-located, content-shaped skeleton (no layout shift)?** See `.claude/rules/frontend/loading-states.md`.
 
 ## 4. Infrastructure & Services
 
@@ -77,34 +78,35 @@ Before approving any PR, verify:
 | Sentry | Error monitoring | Active |
 -->
 
-## 5. Git Workflow
+## 5. Logging & Error Monitoring
+
+- **Use the project logger** — NEVER `console.*` in production code (enforce via linter, e.g. Biome `noConsole`)
+- **NEVER log sensitive data** — API keys, tokens, passwords, session objects
+- **Logging is mandatory** — every route handler, service method, and event handler must log its outcome (success, not-found, error). Match the patterns in existing handlers.
+- **Error monitoring is mandatory** — every catch block in route handlers and service boundaries must capture errors to the error monitoring service (e.g. Sentry). Never swallow errors silently.
+
+## 6. Git Workflow
 
 **Branch naming:** `feature/{ticket}-{short-description}` (e.g., `feature/123-user-auth`)
 **Commit messages:** Reference ticket (e.g., `#123: Implement user auth flow`)
+**Branch off your integration branch** (e.g. `develop`) **and PR to it** unless explicitly told otherwise. If `main` is the production branch, never target it directly.
 **Always use feature branches + PRs.** NEVER commit directly to `main` or `develop`.
 **ALWAYS create PRs as drafts** (`gh pr create --draft`). The author decides when to mark "Ready for review."
 **PR description:** Link to ticket, describe what changed and why, list affected files.
 
-## 6. Figma-to-Code Workflow
+## 7. Code Intelligence
 
-When implementing a page from a Figma mockup:
-1. Create an implementation plan from the design
-2. Execute the plan, loading design tokens and brand rules first
-3. Use `figma:implement-design` to translate the Figma design to code
-4. **ALWAYS build from the existing component library** — do NOT use Figma-generated code. Read the Figma design as a visual spec and implement using the project's components and design tokens.
-5. Write tests alongside implementation
+Prefer LSP over Grep/Read for code navigation — it's faster, precise, and avoids reading entire files:
+- `workspaceSymbol` to find where something is defined
+- `findReferences` to see all usages across the codebase
+- `goToDefinition` / `goToImplementation` to jump to source
+- `hover` for type info without reading the file
 
-### Component Resolution Order
+Use Grep only when LSP isn't available or for text/pattern searches (comments, strings, config).
 
-When a design requires a component, resolve it in this order:
+After writing or editing code, check LSP diagnostics and fix errors before proceeding.
 
-1. **Check existing components** in your project's component library — use them if they exist
-2. **Check the Tailwind Plus component list** in @.claude/tailwind-plus-components.md — if the needed component exists there, **ask the user to provide the code** from the Tailwind Plus website (paid license)
-3. **If the component does not exist** in either the codebase or the Tailwind Plus list, **ask the user** before creating a custom component
-
-NEVER create a new component from scratch if one already exists in the codebase or is available from Tailwind Plus.
-
-## 7. AI-Specific Instructions
+## 8. AI-Specific Instructions
 
 - **Read and ingest before you edit.** Always read relevant source files before proposing changes. NEVER speculate about code you haven't inspected.
 - **These rules are authoritative over observed codebase patterns.** If existing code violates a rule in this document or `.claude/rules/`, that is technical debt — not a convention to follow. Never justify bad practices because you see them elsewhere in the repo. When in doubt, follow the rules, not the code.
@@ -115,4 +117,7 @@ NEVER create a new component from scratch if one already exists in the codebase 
 - **Check existing types before creating new ones** to avoid duplication. Create new types when genuinely needed for new features.
 - **Flag security concerns proactively** (exposed secrets, SQL injection, missing auth, etc.).
 - **Use parallel tool calls** for independent operations (e.g., reading multiple files, running lint and test simultaneously).
-- **Package context awareness:** When working in a specific package, prioritize that package's rule file.
+- **Package context awareness:** When working in a package, **read and follow** its rules file before writing code:
+  - API/backend package → `.claude/rules/backend/api.md`
+  - Web app package → `.claude/rules/frontend/webapp.md`
+  - Shopify app package → `.claude/rules/shopify-app/shopify-app.md`

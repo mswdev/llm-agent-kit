@@ -1,20 +1,5 @@
 # Security
 
-## No-Touch Zones
-
-These files require **explicit approval** before any modification:
-
-<!-- Customize per project. Examples: -->
-<!-- - `src/crypto/Cryptographer.ts` — Encryption logic -->
-<!-- - `src/billing/Calculator.ts` — Financial math -->
-<!-- - `prisma/schema.prisma` — Database schema -->
-
-- Any `.env*` files, deployment configs, or CI/CD workflows
-- Database migration files
-- Authentication/authorization configuration
-- Cryptography or encryption modules
-- Financial calculation modules
-
 ## Security Rules
 
 - **NEVER hardcode secrets in source code**
