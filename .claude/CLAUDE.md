@@ -19,11 +19,10 @@ See @README.md for project overview and @package.json for available commands.
 - `.claude/rules/accessibility.md` — WCAG 2.1 AA floor / 2.2 AA for new UI; loads on `.tsx`/`.jsx` edits
 - `.claude/rules/frontend/loading-states.md` — skeleton system: content-shaped, no layout shift; loads on `.tsx`/`.jsx` edits
 
-**Package Rules** (path-scoped — load automatically when editing package files):
-<!-- Example:
-- `.claude/rules/backend/api.md` — API layer rules
-- `.claude/rules/frontend/webapp.md` — Frontend rules
--->
+**Package Rules** (path-scoped — load automatically when editing package files; adjust each file's `paths` frontmatter to your package directories, and delete files that don't apply):
+- `.claude/rules/backend/api.md` — API layer: validation, atomicity, concurrency, authorization
+- `.claude/rules/frontend/webapp.md` — Web app: components, Storybook, promotion path, resolution order
+- `.claude/rules/shopify-app/shopify-app.md` — Shopify app: Preact extensions, Polaris `s-*` accessibility
 
 ## How to Use These Instructions
 
@@ -95,26 +94,7 @@ Before approving any PR, verify:
 **ALWAYS create PRs as drafts** (`gh pr create --draft`). The author decides when to mark "Ready for review."
 **PR description:** Link to ticket, describe what changed and why, list affected files.
 
-## 7. Figma-to-Code Workflow
-
-When implementing a page from a Figma mockup:
-1. Create an implementation plan from the design
-2. Execute the plan, loading design tokens and brand rules first
-3. Use `figma:implement-design` to translate the Figma design to code
-4. **ALWAYS build from the existing component library** — do NOT use Figma-generated code. Read the Figma design as a visual spec and implement using the project's components and design tokens.
-5. Write tests alongside implementation
-
-### Component Resolution Order
-
-When a design requires a component, resolve it in this order:
-
-1. **Check existing components** in your project's component library — use them if they exist
-2. **Check the Tailwind Plus component list** in @.claude/tailwind-plus-components.md — if the needed component exists there, **ask the user to provide the code** from the Tailwind Plus website (paid license)
-3. **If the component does not exist** in either the codebase or the Tailwind Plus list, **ask the user** before creating a custom component
-
-NEVER create a new component from scratch if one already exists in the codebase or is available from Tailwind Plus.
-
-## 8. Code Intelligence
+## 7. Code Intelligence
 
 Prefer LSP over Grep/Read for code navigation — it's faster, precise, and avoids reading entire files:
 - `workspaceSymbol` to find where something is defined
@@ -126,7 +106,7 @@ Use Grep only when LSP isn't available or for text/pattern searches (comments, s
 
 After writing or editing code, check LSP diagnostics and fix errors before proceeding.
 
-## 9. AI-Specific Instructions
+## 8. AI-Specific Instructions
 
 - **Read and ingest before you edit.** Always read relevant source files before proposing changes. NEVER speculate about code you haven't inspected.
 - **These rules are authoritative over observed codebase patterns.** If existing code violates a rule in this document or `.claude/rules/`, that is technical debt — not a convention to follow. Never justify bad practices because you see them elsewhere in the repo. When in doubt, follow the rules, not the code.
@@ -137,4 +117,7 @@ After writing or editing code, check LSP diagnostics and fix errors before proce
 - **Check existing types before creating new ones** to avoid duplication. Create new types when genuinely needed for new features.
 - **Flag security concerns proactively** (exposed secrets, SQL injection, missing auth, etc.).
 - **Use parallel tool calls** for independent operations (e.g., reading multiple files, running lint and test simultaneously).
-- **Package context awareness:** When working in a specific package, prioritize that package's rule file.
+- **Package context awareness:** When working in a package, **read and follow** its rules file before writing code:
+  - API/backend package → `.claude/rules/backend/api.md`
+  - Web app package → `.claude/rules/frontend/webapp.md`
+  - Shopify app package → `.claude/rules/shopify-app/shopify-app.md`

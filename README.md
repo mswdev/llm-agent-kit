@@ -30,12 +30,17 @@ llm-agent-kit/
     └── rules/
         ├── code-style.md              # Naming, complexity limits, documentation
         ├── testing.md                 # Test philosophy, structure, quality gates
-        ├── security.md                # No-touch zones, security rules
+        ├── security.md                # Security rules, input validation, money-in-cents
         ├── data-protection.md         # GDPR/CCPA, PII encryption, DSR handling
         ├── file-organization.md       # Directory caps, grouping, dependency direction
         ├── accessibility.md           # WCAG 2.1/2.2 AA (path-scoped to .tsx/.jsx)
-        └── frontend/
-            └── loading-states.md      # Skeleton/spinner system (path-scoped)
+        ├── backend/
+        │   └── api.md                 # API template: validation, atomicity, authz (path-scoped)
+        ├── frontend/
+        │   ├── loading-states.md      # Skeleton/spinner system (path-scoped)
+        │   └── webapp.md              # Web app template: Storybook, promotion path (path-scoped)
+        └── shopify-app/
+            └── shopify-app.md         # Shopify template: Preact, Polaris s-* a11y (path-scoped)
 ```
 
 | File | Purpose | Used By |
@@ -44,15 +49,18 @@ llm-agent-kit/
 | `.claude/CLAUDE.md` | Project context with references to rule files | Claude Code, Codex (via symlink) |
 | `.claude/rules/code-style.md` | Method size limits, naming conventions, TypeScript rules | Claude Code |
 | `.claude/rules/testing.md` | Arrange/Act/Assert structure, what to test, quality gates | Claude Code |
-| `.claude/rules/security.md` | No-touch zones, input validation, secret handling | Claude Code |
+| `.claude/rules/security.md` | Input validation, secret handling, monetary rules | Claude Code |
 | `.claude/rules/file-organization.md` | Directory size caps, domain grouping, dependency direction | Claude Code |
 | `.claude/rules/data-protection.md` | GDPR/CCPA compliance, PII encryption, data subject rights | Claude Code |
 | `.claude/rules/accessibility.md` | WCAG 2.1/2.2 AA patterns; auto-loads only on `.tsx`/`.jsx` edits | Claude Code |
 | `.claude/rules/frontend/loading-states.md` | Skeleton vs. spinner rules, zero layout shift; auto-loads on frontend edits | Claude Code |
+| `.claude/rules/backend/api.md` | Backend package template: validation, atomicity, concurrency, deny-by-default authorization | Claude Code |
+| `.claude/rules/frontend/webapp.md` | Web app package template: Storybook, component promotion path, resolution order | Claude Code |
+| `.claude/rules/shopify-app/shopify-app.md` | Shopify app package template: Preact extensions, Polaris `s-*` accessibility, bundle limits | Claude Code |
 | `.claude/settings.json` | Registers the a11y hooks + enables the TypeScript LSP plugin | Claude Code |
 | `.claude/hooks/post-tool-a11y-check.sh` | PostToolUse hook: lints edited frontend files for a11y violations, feeds findings back into context | Claude Code |
 | `.claude/hooks/stop-a11y-check.sh` | Stop hook: blocks the agent from finishing while touched frontend files still have a11y violations (fail-closed) | Claude Code |
-| `.claude/tailwind-plus-components.md` | Full Tailwind Plus component inventory for Figma-to-code workflows | Both |
+| `.claude/tailwind-plus-components.md` | Full Tailwind Plus component inventory for the component resolution workflow | Both |
 | `.github/prompts/review.md` | Structured PR review prompt with categories and output format | GitHub Copilot / Claude |
 | `.github/actions/claude-stats/action.yml` | Reusable composite action to parse Claude execution stats and post as comment | GitHub Actions |
 | `.github/workflows/claude.yml` | Claude assistant — responds to `@claude` mentions on issues/PRs | GitHub Actions |
@@ -93,8 +101,8 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 2. **Infrastructure table** — your services and their status
 3. **Git workflow** — your branch naming and ticket system
 4. **Linting config** — your linter (Biome, ESLint, etc.); the a11y hooks default to Biome — set `A11Y_LINT_CMD` or edit the hook scripts for ESLint
-5. **No-touch zones** — your critical files that need approval before editing
-6. **Data protection** — replace the placeholder service/registry names in `data-protection.md` (or remove the file if you store no personal data)
+5. **Data protection** — replace the placeholder service/registry names in `data-protection.md` (or remove the file if you store no personal data)
+6. **Package rules** — adjust the `paths` frontmatter in `rules/backend/api.md`, `rules/frontend/webapp.md`, and `rules/shopify-app/shopify-app.md` to your package directories; delete the ones that don't apply
 7. **Hook scope** — set the frontend dir/extension patterns in `.claude/hooks/*-a11y-check.sh` for your repo layout
 8. **Quality gates** — your per-package test and lint commands
 9. **Package-specific review rules** — uncomment and fill in the review.md package rules section
@@ -129,7 +137,6 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - No hardcoded secrets
 - Input validation at system boundaries
 - Monetary values in cents (integers, never floats)
-- No-touch zone patterns for critical files
 
 ### Data Protection (GDPR/CCPA)
 - PII encrypted at rest with blind indexes for searchable fields
@@ -149,9 +156,10 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - Standardized output format: Verdict, Summary, Strengths, Category Review, Issues (by severity), Suggestions, Verification
 - Grounded in the project's rule files — not invented standards
 
-### Figma-to-Code Workflow
-- Component resolution order: existing components > Tailwind Plus > custom
-- Full inventory of 639 Tailwind Plus components (Application UI, Marketing, Ecommerce)
+### Package Rule Templates (path-scoped)
+- **Backend API** — validation schemas, transaction atomicity, concurrency/idempotency, soft-delete discipline, deny-by-default authorization with BOLA/BFLA guard-test patterns
+- **Web app** — Storybook requirements, component promotion path (route → feature → app → design system), component resolution order (existing components > Tailwind Plus > custom, with the full 639-component Tailwind Plus inventory)
+- **Shopify app** — Preact checkout extensions, Polaris `s-*` accessibility, 64 KB bundle limit
 
 ### GitHub Actions Workflows
 - **Claude assistant** (`claude.yml`) — responds to `@claude` mentions on issues and PRs, supports assignment and label triggers
@@ -171,26 +179,23 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 
 ### Adding package-specific rules
 
-Create rule files under `.claude/rules/` for individual packages:
-
-```
-.claude/rules/
-├── code-style.md
-├── testing.md
-├── security.md
-├── file-organization.md
-├── backend/
-│   └── api.md          # API-specific rules
-└── frontend/
-    └── webapp.md       # Frontend-specific rules
-```
-
-Then reference them from `CLAUDE.md`:
+The kit ships three path-scoped package rule templates (`backend/api.md`, `frontend/webapp.md`, `shopify-app/shopify-app.md`). To add more, create a rule file under `.claude/rules/` with a `paths` frontmatter scoping it to the package directory:
 
 ```markdown
-**Package Rules:**
-- @.claude/rules/backend/api.md — API layer rules
-- @.claude/rules/frontend/webapp.md — Frontend rules
+---
+paths:
+  - "worker/**"
+---
+
+# Worker Package Rules
+...
+```
+
+Then list it (as a plain path, not an `@`-import — path-scoped rules load automatically) in `CLAUDE.md`'s Package Rules section:
+
+```markdown
+**Package Rules** (path-scoped — load automatically when editing package files):
+- `.claude/rules/worker/worker.md` — Queue worker rules
 ```
 
 ### Supporting additional LLMs
