@@ -9,7 +9,7 @@
 #   2. Set FRONTEND_DIRS / FRONTEND_EXTS below for your project.
 #   3. The jq parsing below targets Biome's JSON schema. For ESLint, set
 #      A11Y_LINT_CMD and adjust the jq (ESLint uses .messages[].ruleId/.line).
-#   4. Register in .claude/settings.json (see example at end of this file).
+#   4. Registered in .claude/settings.json (shipped with this kit).
 
 set -euo pipefail
 
@@ -109,24 +109,3 @@ jq -n \
   }'
 
 exit 0
-
-# ─── settings.json registration ───────────────────────────────────────────────
-# Add the following to your .claude/settings.json:
-#
-# {
-#   "hooks": {
-#     "PostToolUse": [
-#       {
-#         "matcher": "Write|Edit",
-#         "hooks": [
-#           {
-#             "type": "command",
-#             "command": ".claude/hooks/post-tool-a11y-check.sh",
-#             "timeout": 20,
-#             "statusMessage": "Checking accessibility..."
-#           }
-#         ]
-#       }
-#     ]
-#   }
-# }

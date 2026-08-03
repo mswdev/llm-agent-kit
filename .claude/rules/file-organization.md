@@ -3,7 +3,7 @@
 ## Directory Size Limits
 
 These are **hard limits**, not guidelines:
-- **MAXIMUM 10 source files per directory.** Count only source files (`.ts`, `.tsx`) — colocated `.test.` and `.stories.` files do NOT count toward the cap. If a directory has 10 source files, the next file MUST go in a subdirectory. No exceptions.
+- **MAXIMUM 15 source files per directory.** Count only source files (`.ts`, `.tsx`) — colocated `.test.` and `.stories.` files do NOT count toward the cap. If a directory has 15 source files, the next file MUST go in a subdirectory. No exceptions.
 - **Colocate test and story files with their source files.** `Button.tsx`, `Button.test.tsx`, and `Button.stories.tsx` belong together in the same directory.
 
 When a directory approaches the cap, group related files into subdirectories by **domain**, **feature**, or **concern** — not by file type. Colocated tests and stories move with their source files into the subdirectory.
@@ -24,13 +24,13 @@ Imports flow **downward and inward**, never upward or sideways across features.
 
 ## DO NOT MIMIC EXISTING BAD PATTERNS
 
-- **NEVER add files to a directory that already exceeds the 10-file cap.** Flag it to the user and propose a restructuring.
+- **NEVER add files to a directory that already exceeds the 15-file cap.** Flag it to the user and propose a restructuring.
 - **When creating new files, follow these rules from scratch** — do not pattern-match against nearby directories that may be poorly organized.
 
 ## Code Review Checklist
 
 Before approving any PR, verify:
-- [ ] **Is every directory under the 10-file cap (source files only)?**
+- [ ] **Is every directory under the 15-file cap (source files only)?**
 - [ ] **Are test and story files colocated with their source files?**
 - [ ] **Are subdirectories grouped by domain/feature, not by file type?**
 - [ ] **Do imports flow downward — no parent importing from child, no sibling cross-imports?**

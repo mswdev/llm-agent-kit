@@ -20,12 +20,22 @@ llm-agent-kit/
 │       └── openai-review.yml         # Codex automated PR review
 └── .claude/
     ├── CLAUDE.md                      # Claude Code instructions
+    ├── settings.json                  # Hook registration + LSP plugin
     ├── tailwind-plus-components.md    # 639-component Tailwind Plus inventory
+    ├── hooks/
+    │   ├── post-tool-a11y-check.sh    # PostToolUse: a11y-lint edited frontend files
+    │   ├── post-tool-a11y-check.test.sh
+    │   ├── stop-a11y-check.sh         # Stop: block finishing with a11y violations
+    │   └── stop-a11y-check.test.sh
     └── rules/
         ├── code-style.md              # Naming, complexity limits, documentation
         ├── testing.md                 # Test philosophy, structure, quality gates
-        ├── security.md               # No-touch zones, security rules
-        └── file-organization.md      # Directory caps, grouping, dependency direction
+        ├── security.md                # No-touch zones, security rules
+        ├── data-protection.md         # GDPR/CCPA, PII encryption, DSR handling
+        ├── file-organization.md       # Directory caps, grouping, dependency direction
+        ├── accessibility.md           # WCAG 2.1/2.2 AA (path-scoped to .tsx/.jsx)
+        └── frontend/
+            └── loading-states.md      # Skeleton/spinner system (path-scoped)
 ```
 
 | File | Purpose | Used By |
@@ -36,6 +46,12 @@ llm-agent-kit/
 | `.claude/rules/testing.md` | Arrange/Act/Assert structure, what to test, quality gates | Claude Code |
 | `.claude/rules/security.md` | No-touch zones, input validation, secret handling | Claude Code |
 | `.claude/rules/file-organization.md` | Directory size caps, domain grouping, dependency direction | Claude Code |
+| `.claude/rules/data-protection.md` | GDPR/CCPA compliance, PII encryption, data subject rights | Claude Code |
+| `.claude/rules/accessibility.md` | WCAG 2.1/2.2 AA patterns; auto-loads only on `.tsx`/`.jsx` edits | Claude Code |
+| `.claude/rules/frontend/loading-states.md` | Skeleton vs. spinner rules, zero layout shift; auto-loads on frontend edits | Claude Code |
+| `.claude/settings.json` | Registers the a11y hooks + enables the TypeScript LSP plugin | Claude Code |
+| `.claude/hooks/post-tool-a11y-check.sh` | PostToolUse hook: lints edited frontend files for a11y violations, feeds findings back into context | Claude Code |
+| `.claude/hooks/stop-a11y-check.sh` | Stop hook: blocks the agent from finishing while touched frontend files still have a11y violations (fail-closed) | Claude Code |
 | `.claude/tailwind-plus-components.md` | Full Tailwind Plus component inventory for Figma-to-code workflows | Both |
 | `.github/prompts/review.md` | Structured PR review prompt with categories and output format | GitHub Copilot / Claude |
 | `.github/actions/claude-stats/action.yml` | Reusable composite action to parse Claude execution stats and post as comment | GitHub Actions |
@@ -76,13 +92,15 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 1. **Project overview** — your product, domain terms, and architecture
 2. **Infrastructure table** — your services and their status
 3. **Git workflow** — your branch naming and ticket system
-4. **Linting config** — your linter (Biome, ESLint, etc.)
+4. **Linting config** — your linter (Biome, ESLint, etc.); the a11y hooks default to Biome — set `A11Y_LINT_CMD` or edit the hook scripts for ESLint
 5. **No-touch zones** — your critical files that need approval before editing
-6. **Quality gates** — your per-package test and lint commands
-7. **Package-specific review rules** — uncomment and fill in the review.md package rules section
-8. **GitHub Actions secrets** — add `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` to your repo secrets
-9. **Workflow models** — update the `--model` and `model:` values in the workflow files to your preferred models
-10. **Enable Claude PR review** — uncomment the `if` condition in `claude-review.yml` (disabled by default)
+6. **Data protection** — replace the placeholder service/registry names in `data-protection.md` (or remove the file if you store no personal data)
+7. **Hook scope** — set the frontend dir/extension patterns in `.claude/hooks/*-a11y-check.sh` for your repo layout
+8. **Quality gates** — your per-package test and lint commands
+9. **Package-specific review rules** — uncomment and fill in the review.md package rules section
+10. **GitHub Actions secrets** — add `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` to your repo secrets
+11. **Workflow models** — update the `--model` and `model:` values in the workflow files to your preferred models
+12. **Enable Claude PR review** — uncomment the `if` condition in `claude-review.yml` (disabled by default)
 
 ## What's Included
 
@@ -91,13 +109,13 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - Functional decomposition and single-purpose functions
 
 ### Code Standards (Hard Limits)
-- 25-line method maximum
+- 25-line method maximum for logic-bearing code; 50 lines for React component render functions and custom hooks
 - 2 levels of nesting maximum
 - 3 parameters per method maximum
 - No `any` types, no magic numbers, early returns over nesting
 
 ### File Organization (Hard Limits)
-- 10 source files per directory maximum (tests/stories excluded from count)
+- 15 source files per directory maximum (tests/stories excluded from count)
 - Colocate tests and stories with source files
 - Group subdirectories by domain/feature, not file type
 - Imports flow downward only — no parent-from-child or sibling cross-imports
@@ -112,6 +130,19 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - Input validation at system boundaries
 - Monetary values in cents (integers, never floats)
 - No-touch zone patterns for critical files
+
+### Data Protection (GDPR/CCPA)
+- PII encrypted at rest with blind indexes for searchable fields
+- Data subject rights (access/erasure) routed through a DSR processor with audit logging
+- PII column registry + guard-test pattern so new PII columns can't ship unclassified
+- Retention policies, cache TTLs, and log/error-monitoring scrubbing
+
+### Accessibility Enforcement
+- `accessibility.md` rule file — path-scoped, loads only on `.tsx`/`.jsx` edits (WCAG 2.1 AA floor / 2.2 AA for new UI)
+- `loading-states.md` rule file — content-shaped skeletons, zero layout shift, skeleton-vs-spinner decision
+- PostToolUse hook — a11y-lints every edited frontend file and injects violations back into context for same-turn fixes
+- Stop hook — blocks the agent from declaring done while touched frontend files still carry a11y violations (fail-closed if the linter can't run)
+- Both hooks ship with smoke tests and are pre-registered in `.claude/settings.json`
 
 ### PR Review Prompt
 - Structured review across 6 categories: Code Quality, Security, Testing, Potential Bugs, PR Hygiene, File Organization
