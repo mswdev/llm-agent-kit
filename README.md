@@ -149,7 +149,13 @@ Fork this repo and customize the placeholder sections (marked with `<!-- -->` co
 - `loading-states.md` rule file — content-shaped skeletons, zero layout shift, skeleton-vs-spinner decision
 - PostToolUse hook — a11y-lints every edited frontend file and injects violations back into context for same-turn fixes
 - Stop hook — blocks the agent from declaring done while touched frontend files still carry a11y violations (fail-closed if the linter can't run)
-- Both hooks ship with smoke tests and are pre-registered in `.claude/settings.json`
+- Both hooks ship with smoke tests and are pre-registered in `.claude/settings.json` (if your project already has a settings.json, merge the `hooks` block into it rather than overwriting)
+
+The *deterministic team-wide* gates are project-specific (they need your stack), so wire them per project:
+- a lefthook/husky pre-commit job running the linter's a11y rules (hard-blocks at commit),
+- a CI component gate (e.g. Storybook + `@storybook/addon-a11y` with `a11y.test: "error"`),
+- a story-existence check so no component dodges the component a11y gate,
+- a page-level gate (e.g. `@axe-core/playwright` on rendered pages) for the composition rules a component gate can't see — one `<main>`, heading order, `html[lang]`, skip link, composed contrast — with a per-route baseline so it enforces no-regression without forcing existing fixes.
 
 ### PR Review Prompt
 - Structured review across 6 categories: Code Quality, Security, Testing, Potential Bugs, PR Hygiene, File Organization
